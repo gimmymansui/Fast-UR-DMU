@@ -32,7 +32,7 @@ class WSAD(Module):
         self.flag = flag
         self.a_nums = a_nums
         self.n_nums = n_nums
-
+        
         self.embedding = Temporal(input_size,512)
         self.triplet = nn.TripletMarginLoss(margin=1)
         self.cls_head = ADCLS_head(1024, 1)
@@ -58,8 +58,12 @@ class WSAD(Module):
         else:
             b, t, d = x.size()
             n = 1
-        x = self.embedding(x)
-        x = self.selfatt(x)
+        
+        # Apply pruning mask during inference
+        with torch.no_grad():
+            x = self.embedding(x)
+            x = self.selfatt(x)
+            
         if self.flag == "Train":
             N_x = x[:b*n//2]                  #### Normal part
             A_x = x[b*n//2:]                  #### Abnormal part
